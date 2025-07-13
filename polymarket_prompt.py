@@ -90,6 +90,7 @@ Analyze each market to determine if it offers value by estimating the "true" pro
   {
     "market": "<Option Name>",
     "true_cost": <Estimated true probability of the Yes outcome in percentage, e.g., 5.0>,
+    "bet": <Yes or no>,
     "reasoning": "<Detailed explanation of the estimated true probability, including external data, probability estimates, or market inefficiencies>"
   }
 ]
