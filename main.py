@@ -1,7 +1,6 @@
 import streamlit as st
-from test_polymarket import get_polymarket_prompt
+from polymarket_prompt import get_polymarket_prompt
 
-# Streamlit app
 st.set_page_config(page_title="Polymarket Prompt Generator", layout="centered")
 
 st.title("📋 Polymarket Prompt Generator")
