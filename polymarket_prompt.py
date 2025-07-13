@@ -58,7 +58,20 @@ def build_prompt(event_data: dict, include_volume: bool = True) -> str:
         return "This event has no markets available."
 
     prompt_lines = [
-        "Search and find out if some of the markets have value and present your response in a JSON format.",
+        "Analyze Polymarket data to identify markets with value for betting. Define 'value' as a market where the difference between the market's implied probability (Yes Price) and the estimated true probability exceeds 5% and offers a positive expected return after accounting for Polymarket fees (e.g., 2%). Respond with a JSON array where each element represents a market analysis in the following format:",
+        "",
+        "```json",
+        "[",
+        "  {",
+        '    "market": "<Option Name>",',
+        '    "true_cost": <Estimated true probability of the Yes outcome in percentage, e.g., 5.0>,',
+        '    "value_score": <Absolute difference between Yes Price and true_cost>,',
+        '    "bet": "<Yes, No, or None>",',
+        '    "reasoning": "<Detailed explanation of the estimated true probability, including candidate relevance, X sentiment, historical patterns, and market liquidity>",',
+        '    "confidence": "<low, medium, high>"',
+        "  }",
+        "]",
+        "```",
         "",
         "# EVENT",
         f"- **Title**: {title}",
@@ -83,20 +96,16 @@ def build_prompt(event_data: dict, include_volume: bool = True) -> str:
 
     prompt_lines.append("""
 # INSTRUCTIONS
-Analyze each market to determine if it offers value by estimating the "true" probability of the "Yes" outcome (in percentage terms). Respond with a JSON array where each element represents a market analysis in the following format:
-
-```json
-[
-  {
-    "market": "<Option Name>",
-    "true_cost": <Estimated true probability of the Yes outcome in percentage, e.g., 5.0>,
-    "bet": <Yes or no>,
-    "reasoning": "<Detailed explanation of the estimated true probability, including external data, probability estimates, or market inefficiencies>"
-  }
-]
-```""")
+- Estimate the 'true' probability using: (1) relevance of the outcome based on historical patterns, public statements, or connections to the event; (2) sentiment from X posts or news after the event's start date; (3) historical data on similar events; and (4) Polymarket trading volume to assess market confidence. Weight these factors and explain their contribution in the reasoning.
+- Prioritize recent data from provided search results and X posts (post-event start date). Cross-reference sources for reliability and discard outdated or unverified information.
+- Recommend a 'Yes' or 'No' bet only if the absolute difference between the Yes Price and true_cost is at least 5% and the expected return, accounting for Polymarket fees (e.g., 2%), is positive. Otherwise, set 'bet' to 'None'.
+- Ignore markets with 0% Yes/No prices or low liquidity (volume < $1000), assume no value unless credible external evidence suggests otherwise. Note illiquidity in the reasoning.
+- Include a 'confidence' field (low, medium, high) based on data availability. If information is limited, provide a probability range for 'true_cost' (e.g., 10-15%) and note uncertainty.
+- Sort markets by descending value_score to highlight the most promising betting opportunities.
+""")
 
     return "\n".join(prompt_lines)
+
 
 def get_polymarket_prompt(event_url: str, include_volume: bool = True) -> str:
     try:
