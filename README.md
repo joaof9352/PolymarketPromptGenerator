@@ -10,7 +10,6 @@ The app takes a Polymarket event URL and automatically generates a structured pr
 - 📊 A list of all available markets, including:
   - Option name
   - "Yes" and "No" prices (in percentages)
-  - Market volume
 - 🧾 Detailed instructions for analyzing each market using a JSON response format
 
 ## 🔍 Use Cases
