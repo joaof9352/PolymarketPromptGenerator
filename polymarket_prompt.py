@@ -47,15 +47,15 @@ def parse_market_info(market: dict) -> dict | None:
         return None
 
 
-def build_prompt(event_data: dict) -> str:
-    title = event_data.get('title', 'Evento Desconhecido')
-    description = event_data.get('description', 'Sem descrição disponível.')
-    resolution_source = event_data.get('resolutionSource', 'Fonte de resolução não especificada.')
-    end_date = event_data.get('endDate', 'Data de fim desconhecida.')
+def build_prompt(event_data: dict, include_volume: bool = True) -> str:
+    title = event_data.get('title', 'Unknown Event')
+    description = event_data.get('description', 'No description available.')
+    resolution_source = event_data.get('resolutionSource', 'No resolution source specified.')
+    end_date = event_data.get('endDate', 'Unknown end date.')
     markets = event_data.get('markets', [])
 
     if not markets:
-        return "O evento não possui mercados disponíveis."
+        return "This event has no markets available."
 
     prompt_lines = [
         "Search and find out if some of the markets have value and present your response in a JSON format.",
@@ -72,11 +72,14 @@ def build_prompt(event_data: dict) -> str:
     for market in markets:
         info = parse_market_info(market)
         if info:
-            prompt_lines.extend([
+            market_lines = [
                 f"- **Option Name**: {info['option_name']}",
                 f"  - **Yes Price**: {info['yes_price']}%",
-                f"  - **No Price**: {info['no_price']}%"
-            ])
+                f"  - **No Price**: {info['no_price']}%",
+            ]
+            if include_volume:
+                market_lines.append(f"  - **Volume**: {info['volume']}")
+            prompt_lines.extend(market_lines)
 
     prompt_lines.append("""
 # INSTRUCTIONS
@@ -88,20 +91,19 @@ Analyze each market to determine if it offers value by estimating the "true" pro
     "market": "<Option Name>",
     "true_cost": <Estimated true probability of the Yes outcome in percentage, e.g., 5.0>,
     "reasoning": "<Detailed explanation of the estimated true probability, including external data, probability estimates, or market inefficiencies>"
-  },
-  ...
-]""")
+  }
+]
+```""")
 
     return "\n".join(prompt_lines)
 
-
-def get_polymarket_prompt(event_url: str) -> str:
+def get_polymarket_prompt(event_url: str, include_volume: bool = True) -> str:
     try:
         slug = get_slug_from_url(event_url)
         event_data = fetch_event_data(slug)
-        return build_prompt(event_data)
+        return build_prompt(event_data, include_volume)
     except Exception as e:
-        return f"Erro ao gerar prompt: {e}"
+        return f"Error generating prompt: {e}"
 
 
 # Exemplo de uso
